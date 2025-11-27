@@ -6,10 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
@@ -50,19 +54,27 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Rating(rating, ::onClickImage)
+                    Rating(rating, ::onPrevClick, ::onNextClick)
                 }
             }
         }
     }
 
-    fun onClickImage() {
-        rating.value = (rating.value + 1) % 5
+    private fun onPrevClick() {
+        if(rating.value > 0) {
+            rating.value = (rating.value - 1)
+        }
+    }
+
+    fun onNextClick() {
+        if(rating.value < 5) {
+            rating.value = (rating.value + 1)
+        }
     }
 }
 
 @Composable
-fun Rating(rating: StateFlow<Int>, onClick: () -> Unit) {
+fun Rating(rating: StateFlow<Int>, onPrevClick: () -> Unit, onNextClick: () -> Unit) {
     val observedRating by rating.collectAsState()
     val image = when(observedRating) {
         RATING_ONE -> painterResource(R.drawable.barron_1)
@@ -72,25 +84,31 @@ fun Rating(rating: StateFlow<Int>, onClick: () -> Unit) {
         RATING_FIVE -> painterResource(R.drawable.barron_5)
         else -> painterResource(R.drawable.barron_1)
     }
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .background(color = Color.Green)
-        .clickable { onClick.invoke() }, contentAlignment = Alignment.Center) {
-        Image(painter = image,
-            contentDescription = "",
-            modifier = Modifier
-                .fillMaxSize()
-                .aspectRatio(1f)
-        )
-        Text(text = "${observedRating + 1}/5", fontSize = 50.sp, color = Color.White)
-    }
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(modifier = Modifier.fillMaxWidth().weight(.05f), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Text("Previous", modifier = Modifier.clickable{ onPrevClick.invoke()})
+            Text("Next", modifier = Modifier.clickable{ onNextClick.invoke()})
+        }
 
+        Box(modifier = Modifier
+            .weight(.8f)
+            .background(color = Color.Green),
+            contentAlignment = Alignment.Center) {
+            Image(painter = image,
+                contentDescription = "",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .aspectRatio(1f)
+            )
+            Text(text = "${observedRating + 1}/5", fontSize = 50.sp, color = Color.White)
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     ReactionAppTheme {
-        Rating(MutableStateFlow(0), {})
+        Rating(MutableStateFlow(0), {}, {})
     }
 }
